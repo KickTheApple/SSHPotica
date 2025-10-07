@@ -6,7 +6,9 @@ set(CMAKE_C_STANDARD 11)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(LIBSSH REQUIRED libssh)
 
-add_executable(SSHPotica main.c main.h)
+add_executable(SSHPotica main.c main.h
+        autorizzaci.cpp
+        autorizzaci.h)
 
 include_directories(.)
 
