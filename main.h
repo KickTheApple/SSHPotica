@@ -4,21 +4,32 @@
 #ifndef SSHPOTICA_MAIN_H
 #define SSHPOTICA_MAIN_H
 
+#include <libssh/libssh.h>
+#include <libssh/server.h>
+
 #define ALGO "ssh-rsa"
 #define PUBKEY "/etc/ssh/ssh_host_rsa_key"
 #define SUBKEY "/etc/ssh/ssh_host_ecdsa_key"
 
-struct connectionData {
+typedef struct poveznik {
 
-    char* ip;
-    char* port;
+    ssh_session secija;
+    ssh_bind binding;
 
-    char* username;
-    char* password;
+    char* connAddr;
+    int portland;
+    int verbosity;
 
-    char* commands;
+    char *ecdsa_key;
+    char *ed25519_key;
+    char *rsa_key;
+    char *host_key;
 
-};
+
+    //char* username; // root
+    //char* password; // 12345678
+
+} poveznik;
 
 
 

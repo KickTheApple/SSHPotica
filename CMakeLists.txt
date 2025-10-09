@@ -7,7 +7,7 @@ find_package(PkgConfig REQUIRED)
 pkg_check_modules(LIBSSH REQUIRED libssh)
 
 add_executable(SSHPotica main.c main.h
-        autorizzaci.cpp
+        autorizzaci.c
         autorizzaci.h)
 
 include_directories(.)
