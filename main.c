@@ -39,27 +39,27 @@ void ubijalnikConnectiona(conInformation* connection_data) {
 
 
 
-int testValidity(conInformation information) {
+int testValidity(conInformation* information) {
     int rc = 0;
 
-    if (ssh_handle_key_exchange(information.currentSes) != SSH_OK) {
+    if (ssh_handle_key_exchange(information->currentSes) != SSH_OK) {
         printf("Exhange Failed\n");
         return -1;
     }
     printf("Exchange succeeded\n");
 
     while (1) {
-        information.sporocilo = ssh_message_get(information.currentSes);
-        if (information.sporocilo == NULL) {
+        information->sporocilo = ssh_message_get(information->currentSes);
+        if (information->sporocilo == NULL) {
             break;
         }
 
-        if (ssh_message_subtype(information.sporocilo) == SSH_AUTH_METHOD_PASSWORD) {
-            information.username = ssh_message_auth_user(information.sporocilo);
-            information.password = ssh_message_auth_password(information.sporocilo);
+        if (ssh_message_subtype(information->sporocilo) == SSH_AUTH_METHOD_PASSWORD) {
+            information->username = ssh_message_auth_user(information->sporocilo);
+            information->password = ssh_message_auth_password(information->sporocilo);
 
-            printf("Auth attempt: user=%s, password=%s\n", information.username, information.password);
-            ssh_message_auth_reply_success(information.sporocilo, 0);
+            printf("Auth attempt: user=%s, password=%s\n", information->username, information->password);
+            ssh_message_auth_reply_success(information->sporocilo, 0);
 
             logging(information);
             shellRuntime(information);
@@ -67,8 +67,8 @@ int testValidity(conInformation information) {
             return 1;
         }
 
-        ssh_message_reply_default(information.sporocilo);
-        ssh_message_free(information.sporocilo);
+        ssh_message_reply_default(information->sporocilo);
+        ssh_message_free(information->sporocilo);
     }
 
     return rc;
@@ -76,7 +76,7 @@ int testValidity(conInformation information) {
 
 int dogajalnik(poveznik* povezovalec) {
 
-    conInformation connection_data;
+    conInformation* connection_data = malloc(sizeof(conInformation));
     povezovalec->secija = ssh_new();
 
 
@@ -116,9 +116,9 @@ int dogajalnik(poveznik* povezovalec) {
                 fprintf(stderr, "Fork returned error: `%d'.\n",-1);
                 exit(-1);
             case 0:
-                connection_data.currentSes = povezovalec->secija;
-                connection_data.ip = povezovalec->connAddr;
-                connection_data.port = povezovalec->portland;
+                connection_data->currentSes = povezovalec->secija;
+                connection_data->ip = povezovalec->connAddr;
+                connection_data->port = povezovalec->portland;
                 exit(testValidity(connection_data));
             default:
                 continue;

@@ -24,7 +24,7 @@ typedef struct connectionData {
 
 } conInformation;
 
-int logging(conInformation);
-int shellRuntime(conInformation);
+int logging(conInformation*);
+int shellRuntime(conInformation*);
 
 #endif //SSHPOTICA_AUTORIZZACI_H
