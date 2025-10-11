@@ -14,13 +14,17 @@ typedef struct connectionData {
     ssh_message sporocilo;
 
     char* ip;
-    char* port;
+    int port;
 
     char* username;
     char* password;
+    char* pubkey;
 
     char* commands;
 
 } conInformation;
+
+int logging(conInformation);
+int shellRuntime(conInformation);
 
 #endif //SSHPOTICA_AUTORIZZACI_H

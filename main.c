@@ -29,7 +29,6 @@ void ubijalnikSocketa(poveznik* povezovalec) {
 
 void ubijalnikConnectiona(conInformation* connection_data) {
     free(connection_data->ip);
-    free(connection_data->port);
     free(connection_data->username);
     free(connection_data->password);
     free(connection_data->commands);
@@ -56,7 +55,16 @@ int testValidity(conInformation information) {
         }
 
         if (ssh_message_subtype(information.sporocilo) == SSH_AUTH_METHOD_PASSWORD) {
-            printf("PASSWORD\n");
+            information.username = ssh_message_auth_user(information.sporocilo);
+            information.password = ssh_message_auth_password(information.sporocilo);
+
+            printf("Auth attempt: user=%s, password=%s\n", information.username, information.password);
+            ssh_message_auth_reply_success(information.sporocilo, 0);
+
+            logging(information);
+            shellRuntime(information);
+
+            return 1;
         }
 
         ssh_message_reply_default(information.sporocilo);
@@ -68,23 +76,8 @@ int testValidity(conInformation information) {
 
 int dogajalnik(poveznik* povezovalec) {
 
-
-
-}
-
-int main(int argc, char* args[]) {
-
-    poveznik* povezovalec = calloc(1, sizeof(poveznik));
     conInformation connection_data;
-
-
-    povezovalec->portland = 2222;
-    povezovalec->verbosity = SSH_LOG_PROTOCOL;
-
-    //----------
-
     povezovalec->secija = ssh_new();
-
 
 
     if (povezovalec->secija == NULL) {
@@ -92,7 +85,7 @@ int main(int argc, char* args[]) {
     }
     povezovalec->binding = ssh_bind_new();
 
-    ssh_bind_options_set(povezovalec->binding, SSH_BIND_OPTIONS_BINDADDR, "localhost");
+    ssh_bind_options_set(povezovalec->binding, SSH_BIND_OPTIONS_BINDADDR, povezovalec->connAddr);
     ssh_bind_options_set(povezovalec->binding, SSH_BIND_OPTIONS_BINDPORT, &povezovalec->portland);
     ssh_bind_options_set(povezovalec->binding, SSH_BIND_OPTIONS_LOG_VERBOSITY, &povezovalec->verbosity);
     ssh_bind_options_set(povezovalec->binding, SSH_BIND_OPTIONS_HOSTKEY, PUBKEY);
@@ -124,11 +117,28 @@ int main(int argc, char* args[]) {
                 exit(-1);
             case 0:
                 connection_data.currentSes = povezovalec->secija;
+                connection_data.ip = povezovalec->connAddr;
+                connection_data.port = povezovalec->portland;
                 exit(testValidity(connection_data));
             default:
                 continue;
         }
     }
+
+    return 0;
+
+}
+
+int main(int argc, char* args[]) {
+
+    poveznik* povezovalec = calloc(1, sizeof(poveznik));
+
+    povezovalec->connAddr = "localhost";
+    povezovalec->portland = 2222;
+    povezovalec->verbosity = SSH_LOG_PROTOCOL;
+
+
+    dogajalnik(povezovalec);
 
     ssh_disconnect(povezovalec->secija);
     ssh_free(povezovalec->secija);
