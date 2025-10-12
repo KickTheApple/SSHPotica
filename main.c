@@ -11,6 +11,11 @@
 #include <libssh/libssh.h>
 #include <libssh/server.h>
 
+#include <sys/file.h>
+#include <sys/types.h>
+
+#define LOCKFILE "/tmp/fork_lockfile"
+
 
 
 
@@ -41,6 +46,7 @@ void ubijalnikConnectiona(conInformation* connection_data) {
 
 int testValidity(conInformation* information, poveznik* povezovalec) {
     int rc = 0;
+    ssh_channel channel;
 
     if (ssh_handle_key_exchange(information->currentSes) != SSH_OK) {
         printf("Exhange Failed\n");
@@ -58,15 +64,43 @@ int testValidity(conInformation* information, poveznik* povezovalec) {
             information->username = ssh_message_auth_user(information->sporocilo);
             information->password = ssh_message_auth_password(information->sporocilo);
 
+            printf("LOL1\n");
+
             printf("Auth attempt: user=%s, password=%s\n", information->username, information->password);
             ssh_message_auth_reply_success(information->sporocilo, 0);
-            ssh_message_free(information->sporocilo);
-
             logging(information);
-            shellRuntime(information);
+            ssh_message_free(information->sporocilo);
+            continue;
 
-            return 1;
+        } if (ssh_message_subtype(information->sporocilo) == SSH_CHANNEL_SESSION && ssh_message_type(information->sporocilo) == SSH_REQUEST_CHANNEL_OPEN) {
+            printf("LOl2\n");
+
+            ssh_message_channel_request_reply_success(information->sporocilo);
+
+            shellRuntime(information);
+            ssh_message_free(information->sporocilo);
+            continue;
+
         }
+
+        if (ssh_message_subtype(information->sporocilo) == SSH_CHANNEL_REQUEST_PTY && ssh_message_type(information->sporocilo) == SSH_REQUEST_CHANNEL) {
+            printf("LOl3\n");
+
+            ssh_message_channel_request_reply_success(information->sporocilo);
+            ssh_message_free(information->sporocilo);
+            continue;
+
+        }
+
+        if (ssh_message_subtype(information->sporocilo) == SSH_CHANNEL_REQUEST_SHELL && ssh_message_type(information->sporocilo) == SSH_REQUEST_CHANNEL) {
+            printf("LOl4\n");
+
+            ssh_message_channel_request_reply_success(information->sporocilo);
+            ssh_message_free(information->sporocilo);
+            continue;
+
+        }
+
 
         ssh_message_reply_default(information->sporocilo);
         ssh_message_free(information->sporocilo);
@@ -79,6 +113,7 @@ int dogojalnik(poveznik* povezovalec) {
 
     conInformation* connection_data = malloc(sizeof(conInformation));
     povezovalec->secija = ssh_new();
+    int fd = open(LOCKFILE, O_CREAT);
 
 
     if (povezovalec->secija == NULL) {
@@ -118,15 +153,18 @@ int dogojalnik(poveznik* povezovalec) {
                 exit(-1);
             case 0:
                 connection_data->currentSes = povezovalec->secija;
+                flock(fd, LOCK_UN);
                 connection_data->ip = povezovalec->connAddr;
                 connection_data->port = povezovalec->portland;
                 exit(testValidity(connection_data, povezovalec));
             default:
+                flock(fd, LOCK_EX);
                 povezovalec->secija = ssh_new();
                 continue;
         }
     }
 
+    close(fd);
     return 0;
 
 }

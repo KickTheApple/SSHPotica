@@ -12,6 +12,7 @@ typedef struct connectionData {
 
     ssh_session currentSes;
     ssh_message sporocilo;
+    ssh_channel channel;
 
     char* ip;
     int port;
