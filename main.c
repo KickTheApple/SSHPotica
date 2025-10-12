@@ -39,7 +39,7 @@ void ubijalnikConnectiona(conInformation* connection_data) {
 
 
 
-int testValidity(conInformation* information) {
+int testValidity(conInformation* information, poveznik* povezovalec) {
     int rc = 0;
 
     if (ssh_handle_key_exchange(information->currentSes) != SSH_OK) {
@@ -60,6 +60,7 @@ int testValidity(conInformation* information) {
 
             printf("Auth attempt: user=%s, password=%s\n", information->username, information->password);
             ssh_message_auth_reply_success(information->sporocilo, 0);
+            ssh_message_free(information->sporocilo);
 
             logging(information);
             shellRuntime(information);
@@ -74,7 +75,7 @@ int testValidity(conInformation* information) {
     return rc;
 }
 
-int dogajalnik(poveznik* povezovalec) {
+int dogojalnik(poveznik* povezovalec) {
 
     conInformation* connection_data = malloc(sizeof(conInformation));
     povezovalec->secija = ssh_new();
@@ -119,8 +120,9 @@ int dogajalnik(poveznik* povezovalec) {
                 connection_data->currentSes = povezovalec->secija;
                 connection_data->ip = povezovalec->connAddr;
                 connection_data->port = povezovalec->portland;
-                exit(testValidity(connection_data));
+                exit(testValidity(connection_data, povezovalec));
             default:
+                povezovalec->secija = ssh_new();
                 continue;
         }
     }
@@ -138,7 +140,7 @@ int main(int argc, char* args[]) {
     povezovalec->verbosity = SSH_LOG_PROTOCOL;
 
 
-    dogajalnik(povezovalec);
+    dogojalnik(povezovalec);
 
     ssh_disconnect(povezovalec->secija);
     ssh_free(povezovalec->secija);
