@@ -75,9 +75,13 @@ int testValidity(conInformation* information, poveznik* povezovalec) {
         } if (ssh_message_subtype(information->sporocilo) == SSH_CHANNEL_SESSION && ssh_message_type(information->sporocilo) == SSH_REQUEST_CHANNEL_OPEN) {
             printf("LOl2\n");
 
+            channel = ssh_message_channel_request_open_reply_accept(information->sporocilo);
+            if (channel == NULL) {
+                printf("PROBLEM s SHELL1\n");
+                return SSH_ERROR;
+            }
+            information->channel = channel;
             ssh_message_channel_request_reply_success(information->sporocilo);
-
-            shellRuntime(information);
             ssh_message_free(information->sporocilo);
             continue;
 
@@ -97,6 +101,9 @@ int testValidity(conInformation* information, poveznik* povezovalec) {
 
             ssh_message_channel_request_reply_success(information->sporocilo);
             ssh_message_free(information->sporocilo);
+            if (information->channel != NULL) {
+                shellRuntime(information);
+            }
             continue;
 
         }
