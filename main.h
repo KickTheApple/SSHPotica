@@ -8,8 +8,7 @@
 #include <libssh/server.h>
 
 #define ALGO "ssh-rsa"
-#define PUBKEY "/etc/ssh/ssh_host_ed25519_key"
-#define SUBKEY "/etc/ssh/ssh_host_ecdsa_key"
+#define PUBKEY "./ssh_key"
 
 typedef struct poveznik {
 
