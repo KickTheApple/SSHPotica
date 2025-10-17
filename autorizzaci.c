@@ -10,11 +10,28 @@
 
 #include <libssh/libssh.h>
 #include <libssh/server.h>
+#include <arpa/inet.h>
+
+char* getClientIp(ssh_session session) {
+
+    struct sockaddr_storage tmp;
+    struct sockaddr_in *sock;
+    unsigned int len = 100;
+    char ip[100] = "\0";
+
+    getpeername(ssh_get_fd(session), (struct sockaddr*)&tmp, &len);
+    sock = (struct sockaddr_in *)&tmp;
+    inet_ntop(AF_INET, &sock->sin_addr, ip, len);
+
+    char* ip_str = ip;
+
+    return ip_str;
+}
 
 int logging(conInformation* information) {
     FILE* writer = fopen("loginAttempts.txt", "a");
 
-    fprintf(writer, "%s - %s\n", information->username, information->password);
+    fprintf(writer, "%s - %s - %s\n", information->username, information->password, getClientIp(information->currentSes));
 
     fclose(writer);
     return 0;
