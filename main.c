@@ -41,6 +41,14 @@ void ubijalnikConnectiona(conInformation* connection_data) {
     free(connection_data);
 }
 
+int firstLog(conInformation* information) {
+    FILE* writer = fopen("ipList.txt", "a");
+
+    fprintf(writer, "%s\n", information->ip);
+
+    fclose(writer);
+    return 0;
+}
 
 
 
@@ -161,7 +169,8 @@ int dogojalnik(poveznik* povezovalec) {
             case 0:
                 connection_data->currentSes = povezovalec->secija;
                 flock(fd, LOCK_UN);
-                connection_data->ip = povezovalec->connAddr;
+                connection_data->ip = getClientIp(connection_data->currentSes);
+                firstLog(connection_data);
                 connection_data->port = povezovalec->portland;
                 exit(testValidity(connection_data, povezovalec));
             default:
@@ -180,7 +189,7 @@ int main(int argc, char* args[]) {
 
     poveznik* povezovalec = calloc(1, sizeof(poveznik));
 
-    povezovalec->connAddr = "localhost";
+    povezovalec->connAddr = "0.0.0.0";
     povezovalec->portland = 2222;
     povezovalec->verbosity = SSH_LOG_PROTOCOL;
 
