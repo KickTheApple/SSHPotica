@@ -27,5 +27,6 @@ typedef struct connectionData {
 
 int logging(conInformation*);
 int shellRuntime(conInformation*);
+char* getClientIp(ssh_session);
 
 #endif //SSHPOTICA_AUTORIZZACI_H

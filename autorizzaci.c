@@ -23,7 +23,8 @@ char* getClientIp(ssh_session session) {
     sock = (struct sockaddr_in *)&tmp;
     inet_ntop(AF_INET, &sock->sin_addr, ip, len);
 
-    char* ip_str = ip;
+    char* ip_str = malloc(sizeof(ip) + 1);
+    strcpy(ip_str, ip);
 
     return ip_str;
 }
@@ -31,7 +32,7 @@ char* getClientIp(ssh_session session) {
 int logging(conInformation* information) {
     FILE* writer = fopen("loginAttempts.txt", "a");
 
-    fprintf(writer, "%s - %s - %s\n", information->username, information->password, getClientIp(information->currentSes));
+    fprintf(writer, "%s - %s - %s\n", information->username, information->password, information->ip);
 
     fclose(writer);
     return 0;
@@ -83,7 +84,7 @@ int shellRuntime(conInformation* information) {
                 ssh_channel_write(information->channel, buffer, nbytes);
             }
             dataLog(fileName, buffer);
-            printf("%d\n", buffer[0]);
+            printf("%c\n", buffer[0]);
         }
     }
     return -1;
