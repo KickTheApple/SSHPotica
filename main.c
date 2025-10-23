@@ -17,6 +17,7 @@
 
 #include <sys/file.h>
 #include <sys/types.h>
+#include <sys/wait.h>
 
 #define LOCKFILE "/tmp/fork_lockfile"
 
@@ -58,7 +59,6 @@ int testValidity(conInformation* information, poveznik* povezovalec) {
 
     if (ssh_handle_key_exchange(information->currentSes) != SSH_OK) {
         printf("Exhange Failed\n");
-        kill(getpid(), 15);
         return -1;
     }
     printf("Exchange succeeded\n");
@@ -90,7 +90,6 @@ int testValidity(conInformation* information, poveznik* povezovalec) {
             channel = ssh_message_channel_request_open_reply_accept(information->sporocilo);
             if (channel == NULL) {
                 printf("PROBLEM s SHELL1\n");
-                kill(getpid(), 15);
                 return SSH_ERROR;
             }
             information->channel = channel;
@@ -126,7 +125,6 @@ int testValidity(conInformation* information, poveznik* povezovalec) {
         ssh_message_free(information->sporocilo);
     }
 
-    kill(getpid(), 15);
     return rc;
 }
 
@@ -183,6 +181,7 @@ int dogojalnik(poveznik* povezovalec) {
             default:
                 flock(fd, LOCK_EX);
                 povezovalec->secija = ssh_new();
+                waitpid(getpid(), NULL, 0);
                 continue;
         }
     }
@@ -197,7 +196,7 @@ int main(int argc, char* args[]) {
     poveznik* povezovalec = calloc(1, sizeof(poveznik));
 
     povezovalec->connAddr = "0.0.0.0";
-    povezovalec->portland = 2222;
+    povezovalec->portland = 22;
     povezovalec->verbosity = SSH_LOG_PROTOCOL;
 
 
