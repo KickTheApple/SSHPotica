@@ -16,6 +16,7 @@ typedef struct connectionData {
 
     char* ip;
     int port;
+    int pdd;
 
     char* username;
     char* password;

@@ -172,6 +172,7 @@ int dogojalnik(poveznik* povezovalec) {
                 fprintf(stderr, "Fork returned error: `%d'.\n",-1);
                 exit(-1);
             case 0:
+                connection_data->pdd = getpid();
                 connection_data->currentSes = povezovalec->secija;
                 flock(fd, LOCK_UN);
                 connection_data->ip = getClientIp(connection_data->currentSes);
@@ -181,7 +182,7 @@ int dogojalnik(poveznik* povezovalec) {
             default:
                 flock(fd, LOCK_EX);
                 povezovalec->secija = ssh_new();
-                waitpid(getpid(), NULL, 0);
+                waitpid(connection_data->pdd, NULL, WNOHANG);
                 continue;
         }
     }
