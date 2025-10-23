@@ -3,6 +3,9 @@
 //
 
 #include "main.h"
+
+#include <signal.h>
+
 #include "autorizzaci.h"
 
 #include <stdlib.h>
@@ -55,6 +58,7 @@ int testValidity(conInformation* information, poveznik* povezovalec) {
 
     if (ssh_handle_key_exchange(information->currentSes) != SSH_OK) {
         printf("Exhange Failed\n");
+        kill(getpid(), 15);
         return -1;
     }
     printf("Exchange succeeded\n");
@@ -86,6 +90,7 @@ int testValidity(conInformation* information, poveznik* povezovalec) {
             channel = ssh_message_channel_request_open_reply_accept(information->sporocilo);
             if (channel == NULL) {
                 printf("PROBLEM s SHELL1\n");
+                kill(getpid(), 15);
                 return SSH_ERROR;
             }
             information->channel = channel;
@@ -121,12 +126,12 @@ int testValidity(conInformation* information, poveznik* povezovalec) {
         ssh_message_free(information->sporocilo);
     }
 
+    kill(getpid(), 15);
     return rc;
 }
 
 int dogojalnik(poveznik* povezovalec) {
 
-    conInformation* connection_data = malloc(sizeof(conInformation));
     povezovalec->secija = ssh_new();
     int fd = open(LOCKFILE, O_CREAT);
 
@@ -154,6 +159,8 @@ int dogojalnik(poveznik* povezovalec) {
 
 
     while (1) {
+        conInformation* connection_data = malloc(sizeof(conInformation));
+
         if (ssh_bind_accept(povezovalec->binding, povezovalec->secija) == SSH_ERROR) {
             printf("WOMP WOMP\n");
             ubijalnikSocketa(povezovalec);
