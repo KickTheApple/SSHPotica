@@ -19,7 +19,6 @@ typedef struct connectionData {
 
     char* username;
     char* password;
-    char* pubkey;
 
     char* commands;
 

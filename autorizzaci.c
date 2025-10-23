@@ -65,6 +65,9 @@ int shellRuntime(conInformation* information) {
     while (ssh_channel_is_open(information->channel) && !ssh_channel_is_eof(information->channel)) {
         nbytes = ssh_channel_read(information->channel, buffer, sizeof(buffer), 0);
         if (nbytes < 0) {
+            ssh_channel_close(information->channel);
+            ssh_channel_send_eof(information->channel);
+            ssh_channel_free(information->channel);
             return SSH_ERROR;
         }
         if (nbytes > 0) {
@@ -87,6 +90,9 @@ int shellRuntime(conInformation* information) {
             printf("%c\n", buffer[0]);
         }
     }
+    ssh_channel_close(information->channel);
+    ssh_channel_send_eof(information->channel);
+    ssh_channel_free(information->channel);
     return -1;
 }
 

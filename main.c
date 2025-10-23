@@ -7,6 +7,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 #include <libssh/libssh.h>
 #include <libssh/server.h>
@@ -15,10 +16,6 @@
 #include <sys/types.h>
 
 #define LOCKFILE "/tmp/fork_lockfile"
-
-
-
-
 
 void ubijalnikSocketa(poveznik* povezovalec) {
     free(povezovalec->secija);
@@ -75,10 +72,13 @@ int testValidity(conInformation* information, poveznik* povezovalec) {
             printf("LOL1\n");
 
             printf("Auth attempt: user=%s, password=%s\n", information->username, information->password);
-            ssh_message_auth_reply_success(information->sporocilo, 0);
+            if (strcmp(information->username, "root") == 0 && strcmp(information->password, "admin") == 0) {
+                ssh_message_auth_reply_success(information->sporocilo, 0);
+                logging(information);
+                ssh_message_free(information->sporocilo);
+                continue;
+            }
             logging(information);
-            ssh_message_free(information->sporocilo);
-            continue;
 
         } if (ssh_message_subtype(information->sporocilo) == SSH_CHANNEL_SESSION && ssh_message_type(information->sporocilo) == SSH_REQUEST_CHANNEL_OPEN) {
             printf("LOl2\n");
