@@ -62,6 +62,10 @@ int shellRuntime(conInformation* information) {
 
     strftime(fileName, sizeof(fileName), "operations_%Y%m%d_%H%M%S.txt", time);
 
+    if (ssh_channel_is_open(information->channel) && !ssh_channel_is_eof(information->channel)) {
+        ssh_channel_write(information->channel, "Welcome user: root\r\n", strlen("Welcome user: root\r\n"));
+    }
+
     while (ssh_channel_is_open(information->channel) && !ssh_channel_is_eof(information->channel)) {
         nbytes = ssh_channel_read(information->channel, buffer, sizeof(buffer), 0);
         if (nbytes < 0) {
@@ -80,9 +84,9 @@ int shellRuntime(conInformation* information) {
             }
 
             if (buffer[0] == 13) {
-                ssh_channel_write(information->channel, "\r\n", strlen("\r\n"));
+                ssh_channel_write(information->channel, "\r\n/bin/bash: Operation not permitted\r\n", strlen("\r\n/bin/bash: Operation not permitted\r\n"));
             } else if (buffer[0] == 127) {
-                ssh_channel_write(information->channel, "\b", strlen("\b"));
+                ssh_channel_write(information->channel, "\b \b", strlen("\b \b"));
             } else {
                 ssh_channel_write(information->channel, buffer, nbytes);
             }

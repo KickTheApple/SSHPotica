@@ -15,6 +15,8 @@
 #include <sys/file.h>
 #include <sys/types.h>
 
+#include <sys/wait.h>
+
 #define LOCKFILE "/tmp/fork_lockfile"
 
 void ubijalnikSocketa(poveznik* povezovalec) {
@@ -126,10 +128,7 @@ int testValidity(conInformation* information, poveznik* povezovalec) {
 
 int dogojalnik(poveznik* povezovalec) {
 
-    conInformation* connection_data = malloc(sizeof(conInformation));
     povezovalec->secija = ssh_new();
-    int fd = open(LOCKFILE, O_CREAT);
-
 
     if (povezovalec->secija == NULL) {
         exit(-1);
@@ -154,6 +153,7 @@ int dogojalnik(poveznik* povezovalec) {
 
 
     while (1) {
+        conInformation* connection_data = malloc(sizeof(conInformation));
         if (ssh_bind_accept(povezovalec->binding, povezovalec->secija) == SSH_ERROR) {
             printf("WOMP WOMP\n");
             ubijalnikSocketa(povezovalec);
@@ -167,20 +167,22 @@ int dogojalnik(poveznik* povezovalec) {
                 fprintf(stderr, "Fork returned error: `%d'.\n",-1);
                 exit(-1);
             case 0:
+                connection_data->pid = getpid();
                 connection_data->currentSes = povezovalec->secija;
-                flock(fd, LOCK_UN);
+                povezovalec->secija = ssh_new();
+
                 connection_data->ip = getClientIp(connection_data->currentSes);
                 firstLog(connection_data);
                 connection_data->port = povezovalec->portland;
-                exit(testValidity(connection_data, povezovalec));
+                int rpd = testValidity(connection_data, povezovalec);
+                kill(connection_data->pid, 15);
+                exit(rpd);
             default:
-                flock(fd, LOCK_EX);
-                povezovalec->secija = ssh_new();
+                waitpid(-1, NULL, WNOHANG);
                 continue;
         }
     }
 
-    close(fd);
     return 0;
 
 }
@@ -190,7 +192,7 @@ int main(int argc, char* args[]) {
     poveznik* povezovalec = calloc(1, sizeof(poveznik));
 
     povezovalec->connAddr = "0.0.0.0";
-    povezovalec->portland = 2222;
+    povezovalec->portland = 22;
     povezovalec->verbosity = SSH_LOG_PROTOCOL;
 
 
