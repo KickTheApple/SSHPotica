@@ -71,7 +71,7 @@ int testValidity(conInformation* information, poveznik* povezovalec) {
             information->username = ssh_message_auth_user(information->sporocilo);
             information->password = ssh_message_auth_password(information->sporocilo);
 
-            printf("LOL1\n");
+            printf("Recieved password request: 1\n");
 
             printf("Auth attempt: user=%s, password=%s\n", information->username, information->password);
             if (strcmp(information->username, "root") == 0 && strcmp(information->password, "admin") == 0) {
@@ -83,11 +83,11 @@ int testValidity(conInformation* information, poveznik* povezovalec) {
             logging(information);
 
         } if (ssh_message_subtype(information->sporocilo) == SSH_CHANNEL_SESSION && ssh_message_type(information->sporocilo) == SSH_REQUEST_CHANNEL_OPEN) {
-            printf("LOl2\n");
+            printf("Recieved channel request: 2\n");
 
             channel = ssh_message_channel_request_open_reply_accept(information->sporocilo);
             if (channel == NULL) {
-                printf("PROBLEM s SHELL1\n");
+                printf("Failed channel handling 1\n");
                 return SSH_ERROR;
             }
             information->channel = channel;
@@ -98,7 +98,7 @@ int testValidity(conInformation* information, poveznik* povezovalec) {
         }
 
         if (ssh_message_subtype(information->sporocilo) == SSH_CHANNEL_REQUEST_PTY && ssh_message_type(information->sporocilo) == SSH_REQUEST_CHANNEL) {
-            printf("LOl3\n");
+            printf("Received terminal reqeust: 3\n");
 
             ssh_message_channel_request_reply_success(information->sporocilo);
             ssh_message_free(information->sporocilo);
@@ -107,7 +107,7 @@ int testValidity(conInformation* information, poveznik* povezovalec) {
         }
 
         if (ssh_message_subtype(information->sporocilo) == SSH_CHANNEL_REQUEST_SHELL && ssh_message_type(information->sporocilo) == SSH_REQUEST_CHANNEL) {
-            printf("LOl4\n");
+            printf("Recieved shell reuqest 4:\n");
 
             ssh_message_channel_request_reply_success(information->sporocilo);
             ssh_message_free(information->sporocilo);
@@ -194,7 +194,6 @@ int main(int argc, char* args[]) {
     povezovalec->connAddr = "0.0.0.0";
     povezovalec->portland = 22;
     povezovalec->verbosity = SSH_LOG_PROTOCOL;
-
 
     dogojalnik(povezovalec);
 
