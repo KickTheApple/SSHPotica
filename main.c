@@ -17,6 +17,8 @@
 
 #include <sys/wait.h>
 
+#include <signal.h>
+
 #define LOCKFILE "/tmp/fork_lockfile"
 
 void ubijalnikSocketa(poveznik* povezovalec) {
@@ -38,6 +40,14 @@ void ubijalnikConnectiona(conInformation* connection_data) {
     free(connection_data->commands);
 
     free(connection_data);
+}
+
+void sklicalecSignalov(int signalizator) {
+    printf("Caught signal %d\n",signalizator);
+
+    while (waitpid(-1, NULL, WNOHANG) > 0);
+
+    exit(signalizator);
 }
 
 int firstLog(conInformation* information) {
@@ -162,23 +172,35 @@ int dogojalnik(poveznik* povezovalec) {
 
         printf("POLO\n");
 
+        int forky;
+
         switch (fork()) {
             case -1:
                 fprintf(stderr, "Fork returned error: `%d'.\n",-1);
                 exit(-1);
             case 0:
-                connection_data->pid = getpid();
-                connection_data->currentSes = povezovalec->secija;
-                povezovalec->secija = ssh_new();
 
-                connection_data->ip = getClientIp(connection_data->currentSes);
-                firstLog(connection_data);
-                connection_data->port = povezovalec->portland;
-                int rpd = testValidity(connection_data, povezovalec);
-                kill(connection_data->pid, 15);
-                exit(rpd);
+                forky = fork();
+                switch (forky) {
+                    case -1:
+                        fprintf(stderr, "Fork returned error: `%d'.\n",-1);
+                        exit(-1);
+                    case 0:
+                        connection_data->pid = getpid();
+                        connection_data->currentSes = povezovalec->secija;
+                        povezovalec->secija = ssh_new();
+
+                        connection_data->ip = getClientIp(connection_data->currentSes);
+                        firstLog(connection_data);
+                        connection_data->port = povezovalec->portland;
+                        int rpd = testValidity(connection_data, povezovalec);
+                        exit(rpd);
+                    default:
+                        waitpid(forky, NULL, 0);
+                        exit(0);
+                }
+
             default:
-                waitpid(-1, NULL, WNOHANG);
                 continue;
         }
     }
@@ -194,6 +216,9 @@ int main(int argc, char* args[]) {
     povezovalec->connAddr = "0.0.0.0";
     povezovalec->portland = 22;
     povezovalec->verbosity = SSH_LOG_PROTOCOL;
+
+    setvbuf(stdout, NULL, _IONBF, 0);
+    signal(SIGCHLD, SIG_IGN);
 
     dogojalnik(povezovalec);
 
