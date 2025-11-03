@@ -7,10 +7,12 @@
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
-
+#include <basher.h>
+#include <pthread.h>
 #include <libssh/libssh.h>
 #include <libssh/server.h>
 #include <arpa/inet.h>
+#include <sys/wait.h>
 
 char* getClientIp(ssh_session session) {
 
@@ -52,48 +54,73 @@ int dataLog(char* fileName, char* buffer) {
     return 0;
 }
 
+void *bashStran(void *zadeve) {
+    struct latchBatch* sadge = zadeve;
+
+    ssize_t n;
+    char bashBuffer[4096];
+    printf("printf\n");
+    while ((n = read(sadge->pipca[0], bashBuffer, sizeof(bashBuffer))) > 0) {
+        bashBuffer[n] = '\0';
+        ssh_channel_write(sadge->aKanal, bashBuffer, n);
+        printf("%s", bashBuffer);
+    }
+    printf("printf\n");
+
+
+    return NULL;
+}
+
 int shellRuntime(conInformation* information) {
     char fileName[100];
     char buffer[256];
     int nbytes;
 
+    int childSide[2];
+    int daddySide[2];
+    int forky = basher2_MoreBashass(childSide, daddySide);
+
     time_t now = time(NULL);
     struct tm *time = localtime(&now);
+    pthread_t pthread;
 
     strftime(fileName, sizeof(fileName), "operations_%Y%m%d_%H%M%S.txt", time);
 
     if (ssh_channel_is_open(information->channel) && !ssh_channel_is_eof(information->channel)) {
         ssh_channel_write(information->channel, "Welcome user: root\r\n", strlen("Welcome user: root\r\n"));
     }
+    printf("Test\n");
+
+    struct latchBatch* ananasBalls = malloc(sizeof(struct latchBatch));
+    ananasBalls->aKanal = information->channel;
+    ananasBalls->pipca = daddySide;
+    pthread_create(&pthread, NULL, bashStran, ananasBalls);
+    printf("Test\n");
 
     while (ssh_channel_is_open(information->channel) && !ssh_channel_is_eof(information->channel)) {
         nbytes = ssh_channel_read(information->channel, buffer, sizeof(buffer), 0);
         if (nbytes < 0) {
-            ssh_channel_close(information->channel);
-            ssh_channel_send_eof(information->channel);
-            ssh_channel_free(information->channel);
-            return SSH_ERROR;
+            break;
         }
         if (nbytes > 0) {
-            if (buffer[0] == 3) {
-                ssh_channel_write(information->channel, "\r\nGoodbye\r\n", strlen("\r\nGoodbye\r\n"));
-                ssh_channel_close(information->channel);
-                ssh_channel_send_eof(information->channel);
-                ssh_channel_free(information->channel);
-                return 0;
-            }
-
-            if (buffer[0] == 13) {
-                ssh_channel_write(information->channel, "\r\n/bin/bash: Operation not permitted\r\n", strlen("\r\n/bin/bash: Operation not permitted\r\n"));
-            } else if (buffer[0] == 127) {
-                ssh_channel_write(information->channel, "\b \b", strlen("\b \b"));
-            } else {
-                ssh_channel_write(information->channel, buffer, nbytes);
-            }
+            buffer[nbytes] = '\0';
+            ssh_channel_write(information->channel, buffer, nbytes);
+            write(childSide[1], buffer, strlen(buffer));
+            write(childSide[1], "\n", strlen("\n"));
             dataLog(fileName, buffer);
-            printf("%c\n", buffer[0]);
+            printf("%s - %d\n", buffer, nbytes);
         }
     }
+
+    printf("End of ends\n");
+    close(childSide[0]);
+    close(childSide[1]);
+    close(daddySide[0]);
+    close(daddySide[1]);
+    free(ananasBalls);
+
+    kill(forky, 15);
+    waitpid(forky, NULL, 0);
     ssh_channel_close(information->channel);
     ssh_channel_send_eof(information->channel);
     ssh_channel_free(information->channel);

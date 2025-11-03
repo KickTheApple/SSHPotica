@@ -8,7 +8,9 @@ pkg_check_modules(LIBSSH REQUIRED libssh)
 
 add_executable(SSHPotica main.c main.h
         autorizzaci.c
-        autorizzaci.h)
+        autorizzaci.h
+        basher.c
+        basher.h)
 
 include_directories(.)
 
