@@ -8,6 +8,7 @@
 struct latchBatch {
     ssh_channel aKanal;
     int* pipca;
+    char fileName[100];
 };
 
 int basher2_MoreBashass(int kidPair[], int parentPair[]);

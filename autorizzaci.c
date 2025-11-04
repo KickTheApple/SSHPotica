@@ -48,7 +48,7 @@ int dataLog(char* fileName, char* buffer) {
     } else if (buffer[0] == 127) {
         fprintf(writer, "-");
     } else {
-        fprintf(writer, "%c", buffer[0]);
+        fprintf(writer, "%s", buffer);
     }
     fclose(writer);
     return 0;
@@ -109,12 +109,12 @@ void *bashStran(void *zadeve) {
     printf("printf\n");
     while ((n = read(sadge->pipca[0], bashBuffer, sizeof(bashBuffer))) > 0) {
         bashBuffer[n] = '\0';
+        printf("%s", bashBuffer);
+        dataLog(sadge->fileName, bashBuffer);
         ssh_channel_write(sadge->aKanal, "\r\n", strlen("\r\n"));
         theGreatReplacer(bashBuffer, sizeof(bashBuffer), '\n', '\r');
         ssh_channel_write(sadge->aKanal, bashBuffer, n);
         ssh_channel_write(sadge->aKanal, "\r\n", strlen("\r\n"));
-
-        printf("%s", bashBuffer);
     }
     printf("printf\n");
 
@@ -140,6 +140,7 @@ int shellRuntime(conInformation* information) {
     struct latchBatch* ananasBalls = malloc(sizeof(struct latchBatch));
     ananasBalls->aKanal = information->channel;
     ananasBalls->pipca = daddySide;
+    memcpy(ananasBalls->fileName, fileName, sizeof(fileName));
     pthread_create(&pthread, NULL, bashStran, ananasBalls);
 
     while (ssh_channel_is_open(information->channel) && !ssh_channel_is_eof(information->channel)) {
