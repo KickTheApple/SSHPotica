@@ -75,8 +75,6 @@ int theGreatReplacer2(char* data, int capacity, char origin, char replacee) {
 
 int theGreatReplacer(char* data, int capacity, char origin, char replacee) {
     char datus[strlen(data)*2];
-    printf("%s\n", data);
-
     int zamikovalec = 0;
     for (int i = 0; i < strlen(data); i++) {
         if (data[i] == origin) {
@@ -86,7 +84,6 @@ int theGreatReplacer(char* data, int capacity, char origin, char replacee) {
         datus[i+zamikovalec] = data[i];
     }
     datus[strlen(data)+zamikovalec] = '\0';
-    printf("%s\n", datus);
     memcpy(data, datus, capacity);
     data[capacity-1] = '\0';
     return 0;
@@ -106,7 +103,6 @@ void *bashStran(void *zadeve) {
 
     ssize_t n;
     char bashBuffer[4096];
-    printf("printf\n");
     while ((n = read(sadge->pipca[0], bashBuffer, sizeof(bashBuffer))) > 0) {
         bashBuffer[n] = '\0';
         printf("%s", bashBuffer);
@@ -116,8 +112,6 @@ void *bashStran(void *zadeve) {
         ssh_channel_write(sadge->aKanal, bashBuffer, n);
         ssh_channel_write(sadge->aKanal, "\r\n", strlen("\r\n"));
     }
-    printf("printf\n");
-
 
     return NULL;
 }
