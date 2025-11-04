@@ -54,6 +54,53 @@ int dataLog(char* fileName, char* buffer) {
     return 0;
 }
 
+int theGreatReplacer2(char* data, int capacity, char origin, char replacee) {
+    char datus[strlen(data)*2];
+    printf("%s\n", data);
+
+    int zamikovalec = 0;
+    for (int i = 0; i < strlen(data); i++) {
+        datus[i+zamikovalec] = data[i];
+        if (data[i] == origin) {
+            zamikovalec += 1;
+            datus[i+zamikovalec] = replacee;
+        }
+    }
+    datus[strlen(data)+zamikovalec] = '\0';
+    printf("%s\n", datus);
+    memcpy(data, datus, capacity);
+    data[capacity-1] = '\0';
+    return 0;
+}
+
+int theGreatReplacer(char* data, int capacity, char origin, char replacee) {
+    char datus[strlen(data)*2];
+    printf("%s\n", data);
+
+    int zamikovalec = 0;
+    for (int i = 0; i < strlen(data); i++) {
+        if (data[i] == origin) {
+            datus[i+zamikovalec] = replacee;
+            zamikovalec += 1;
+        }
+        datus[i+zamikovalec] = data[i];
+    }
+    datus[strlen(data)+zamikovalec] = '\0';
+    printf("%s\n", datus);
+    memcpy(data, datus, capacity);
+    data[capacity-1] = '\0';
+    return 0;
+}
+
+int theGreatNotReplacer(char* data, char origin, char replacee) {
+    char *datus = data;
+    while ((datus = strchr(datus, origin)) != NULL) {
+        *datus = replacee;
+        datus++;
+    }
+    return 0;
+}
+
 void *bashStran(void *zadeve) {
     struct latchBatch* sadge = zadeve;
 
@@ -62,7 +109,11 @@ void *bashStran(void *zadeve) {
     printf("printf\n");
     while ((n = read(sadge->pipca[0], bashBuffer, sizeof(bashBuffer))) > 0) {
         bashBuffer[n] = '\0';
+        ssh_channel_write(sadge->aKanal, "\r\n", strlen("\r\n"));
+        theGreatReplacer(bashBuffer, sizeof(bashBuffer), '\n', '\r');
         ssh_channel_write(sadge->aKanal, bashBuffer, n);
+        ssh_channel_write(sadge->aKanal, "\r\n", strlen("\r\n"));
+
         printf("%s", bashBuffer);
     }
     printf("printf\n");
@@ -86,16 +137,10 @@ int shellRuntime(conInformation* information) {
 
     strftime(fileName, sizeof(fileName), "operations_%Y%m%d_%H%M%S.txt", time);
 
-    if (ssh_channel_is_open(information->channel) && !ssh_channel_is_eof(information->channel)) {
-        ssh_channel_write(information->channel, "Welcome user: root\r\n", strlen("Welcome user: root\r\n"));
-    }
-    printf("Test\n");
-
     struct latchBatch* ananasBalls = malloc(sizeof(struct latchBatch));
     ananasBalls->aKanal = information->channel;
     ananasBalls->pipca = daddySide;
     pthread_create(&pthread, NULL, bashStran, ananasBalls);
-    printf("Test\n");
 
     while (ssh_channel_is_open(information->channel) && !ssh_channel_is_eof(information->channel)) {
         nbytes = ssh_channel_read(information->channel, buffer, sizeof(buffer), 0);
@@ -103,12 +148,16 @@ int shellRuntime(conInformation* information) {
             break;
         }
         if (nbytes > 0) {
+            if (buffer[0] == 3) {
+                break;
+            }
             buffer[nbytes] = '\0';
-            ssh_channel_write(information->channel, buffer, nbytes);
+            theGreatNotReplacer(buffer, '\r', '\n');
             write(childSide[1], buffer, strlen(buffer));
-            write(childSide[1], "\n", strlen("\n"));
+            theGreatReplacer(buffer,sizeof(buffer), '\n', '\r');
+            ssh_channel_write(information->channel, buffer, nbytes);
             dataLog(fileName, buffer);
-            printf("%s - %d\n", buffer, nbytes);
+            printf("%s - %d\n", buffer, buffer[0]);
         }
     }
 
