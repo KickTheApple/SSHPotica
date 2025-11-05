@@ -7,10 +7,10 @@
 
 struct latchBatch {
     ssh_channel aKanal;
-    int* pipca;
+    int pipca;
     char fileName[100];
 };
 
-int basher2_MoreBashass(int kidPair[], int parentPair[]);
+int basher2_MoreBashass(int* master);
 
 #endif //SSHPOTICA_BASHER_H

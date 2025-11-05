@@ -73,6 +73,8 @@ int theGreatReplacer2(char* data, int capacity, char origin, char replacee) {
     return 0;
 }
 
+// beseda\nxdxdxd -> beseda\r\nxdxdxd
+
 int theGreatReplacer(char* data, int capacity, char origin, char replacee) {
     char datus[strlen(data)*2];
     int zamikovalec = 0;
@@ -103,15 +105,13 @@ void *bashStran(void *zadeve) {
 
     ssize_t n;
     char bashBuffer[4096];
-    while ((n = read(sadge->pipca[0], bashBuffer, sizeof(bashBuffer))) > 0) {
+    while ((n = read(sadge->pipca, bashBuffer, sizeof(bashBuffer))) > 0) {
         bashBuffer[n] = '\0';
         printf("%s", bashBuffer);
         dataLog(sadge->fileName, bashBuffer);
-        ssh_channel_write(sadge->aKanal, "\r\n", strlen("\r\n"));
-        theGreatReplacer(bashBuffer, sizeof(bashBuffer), '\n', '\r');
         ssh_channel_write(sadge->aKanal, bashBuffer, n);
-        ssh_channel_write(sadge->aKanal, "\r\n", strlen("\r\n"));
     }
+    printf("bananas\n");
 
     return NULL;
 }
@@ -121,9 +121,8 @@ int shellRuntime(conInformation* information) {
     char buffer[256];
     int nbytes;
 
-    int childSide[2];
-    int daddySide[2];
-    int forky = basher2_MoreBashass(childSide, daddySide);
+    int master;
+    int forky = basher2_MoreBashass(&master);
 
     time_t now = time(NULL);
     struct tm *time = localtime(&now);
@@ -133,7 +132,7 @@ int shellRuntime(conInformation* information) {
 
     struct latchBatch* ananasBalls = malloc(sizeof(struct latchBatch));
     ananasBalls->aKanal = information->channel;
-    ananasBalls->pipca = daddySide;
+    ananasBalls->pipca = master;
     memcpy(ananasBalls->fileName, fileName, sizeof(fileName));
     pthread_create(&pthread, NULL, bashStran, ananasBalls);
 
@@ -143,24 +142,17 @@ int shellRuntime(conInformation* information) {
             break;
         }
         if (nbytes > 0) {
-            if (buffer[0] == 3) {
+            if (buffer[0] == 4) {
                 break;
             }
             buffer[nbytes] = '\0';
-            theGreatNotReplacer(buffer, '\r', '\n');
-            write(childSide[1], buffer, strlen(buffer));
-            theGreatReplacer(buffer,sizeof(buffer), '\n', '\r');
-            ssh_channel_write(information->channel, buffer, nbytes);
-            dataLog(fileName, buffer);
-            printf("%s - %d\n", buffer, buffer[0]);
+            write(master, buffer, strlen(buffer));
         }
     }
 
     printf("End of ends\n");
-    close(childSide[0]);
-    close(childSide[1]);
-    close(daddySide[0]);
-    close(daddySide[1]);
+    close(master);
+    close(forky);
     free(ananasBalls);
 
     kill(forky, 15);
