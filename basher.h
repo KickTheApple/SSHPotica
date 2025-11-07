@@ -8,6 +8,7 @@
 struct latchBatch {
     ssh_channel aKanal;
     int pipca;
+    int* jesusCheck;
     char fileName[100];
 };
 

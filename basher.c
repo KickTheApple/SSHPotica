@@ -20,7 +20,7 @@ int basher2_MoreBashass(int *master) {
 
     if (forky == 0) {
 
-        execl("/usr/bin/docker", "docker", "run", "-i", "--rm", "--entrypoint", "/bin/sh", "--net", "none", "bash", "-i", (char *) NULL);
+        execl("/usr/bin/docker", "docker", "run", "-ti", "--rm", "--entrypoint", "/bin/sh", "--net", "none", "bash", "-i", (char *) NULL);
         printf("bin bang bash error\n");
         exit(1);
 

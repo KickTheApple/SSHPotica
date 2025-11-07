@@ -73,8 +73,6 @@ int theGreatReplacer2(char* data, int capacity, char origin, char replacee) {
     return 0;
 }
 
-// beseda\nxdxdxd -> beseda\r\nxdxdxd
-
 int theGreatReplacer(char* data, int capacity, char origin, char replacee) {
     char datus[strlen(data)*2];
     int zamikovalec = 0;
@@ -111,7 +109,9 @@ void *bashStran(void *zadeve) {
         dataLog(sadge->fileName, bashBuffer);
         ssh_channel_write(sadge->aKanal, bashBuffer, n);
     }
-    printf("bananas\n");
+
+    *sadge->jesusCheck = 1;
+    printf("Shell output concluded\n");
 
     return NULL;
 }
@@ -120,6 +120,7 @@ int shellRuntime(conInformation* information) {
     char fileName[100];
     char buffer[256];
     int nbytes;
+    int hasus = 0;
 
     int master;
     int forky = basher2_MoreBashass(&master);
@@ -133,6 +134,7 @@ int shellRuntime(conInformation* information) {
     struct latchBatch* ananasBalls = malloc(sizeof(struct latchBatch));
     ananasBalls->aKanal = information->channel;
     ananasBalls->pipca = master;
+    ananasBalls->jesusCheck = &hasus;
     memcpy(ananasBalls->fileName, fileName, sizeof(fileName));
     pthread_create(&pthread, NULL, bashStran, ananasBalls);
 
@@ -142,25 +144,26 @@ int shellRuntime(conInformation* information) {
             break;
         }
         if (nbytes > 0) {
+            buffer[nbytes] = '\0';
+            write(master, buffer, strlen(buffer));
             if (buffer[0] == 4) {
                 break;
             }
-            buffer[nbytes] = '\0';
-            write(master, buffer, strlen(buffer));
         }
     }
 
     printf("End of ends\n");
     close(master);
-    close(forky);
+    while (!hasus) {}
     free(ananasBalls);
-
-    kill(forky, 15);
+    kill(forky, SIGTERM);
     waitpid(forky, NULL, 0);
+
     ssh_channel_close(information->channel);
     ssh_channel_send_eof(information->channel);
     ssh_channel_free(information->channel);
-    return -1;
+    printf("Real end of ends\n");
+    return 0;
 }
 
 
