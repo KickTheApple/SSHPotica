@@ -138,17 +138,24 @@ int shellRuntime(conInformation* information) {
     memcpy(ananasBalls->fileName, fileName, sizeof(fileName));
     pthread_create(&pthread, NULL, bashStran, ananasBalls);
 
+    ssh_channel_set_blocking(information->channel, 0);
+
     while (ssh_channel_is_open(information->channel) && !ssh_channel_is_eof(information->channel)) {
         nbytes = ssh_channel_read(information->channel, buffer, sizeof(buffer), 0);
+        if (hasus) {
+            break;
+        }
+
+        if (nbytes == SSH_AGAIN) {
+            continue;
+        }
+
         if (nbytes < 0) {
             break;
         }
         if (nbytes > 0) {
             buffer[nbytes] = '\0';
             write(master, buffer, strlen(buffer));
-            if (buffer[0] == 4) {
-                break;
-            }
         }
     }
 
