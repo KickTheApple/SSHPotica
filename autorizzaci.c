@@ -105,7 +105,7 @@ void *bashStran(void *zadeve) {
     char bashBuffer[4096];
     while ((n = read(sadge->pipca, bashBuffer, sizeof(bashBuffer))) > 0) {
         bashBuffer[n] = '\0';
-        printf("%s", bashBuffer);
+        //printf("%s", bashBuffer);
         dataLog(sadge->fileName, bashBuffer);
         ssh_channel_write(sadge->aKanal, bashBuffer, n);
     }

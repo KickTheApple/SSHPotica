@@ -84,7 +84,7 @@ int testValidity(conInformation* information, poveznik* povezovalec) {
             printf("Recieved password request: 1\n");
 
             printf("Auth attempt: user=%s, password=%s\n", information->username, information->password);
-            if (strcmp(information->username, "root") == 0 && strcmp(information->password, "admin") == 0) {
+            if (strcmp(information->username, "root") == 0 && strcmp(information->password, "root") == 0) {
                 ssh_message_auth_reply_success(information->sporocilo, 0);
                 logging(information);
                 ssh_message_free(information->sporocilo);
